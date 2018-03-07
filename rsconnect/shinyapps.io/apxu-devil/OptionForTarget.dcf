@@ -1,0 +1,12 @@
+name: OptionForTarget
+title: OptionForTarget
+username:
+account: apxu-devil
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 281136
+bundleId: 1248881
+url: https://apxu-devil.shinyapps.io/OptionForTarget/
+when: 1519993583.05348
+asMultiple: FALSE
+asStatic: FALSE
