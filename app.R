@@ -1,4 +1,5 @@
 #setwd('C:/Users/Andreal/Documents/GitHub/OptionForTarget')
+#setwd('C:/Users/User/Documents/GitHub/OptionForTarget')
 #print(getwd())
 source("CalcProfitForStrike.R", local = T, echo = F)
 source('AtmStrike.R', local = T)
