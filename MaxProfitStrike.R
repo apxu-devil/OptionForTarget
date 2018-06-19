@@ -9,7 +9,7 @@ bank_ror = 0.05
 symbol = "QQQ"
 
 # Задаём Цель по цене безового актива;
-target = 130
+target = 200
 
 # Загружаем текущую цену базового актива;
 symbol_price = getQuote(symbol)$Last
@@ -20,7 +20,7 @@ symbol_price = getQuote(symbol)$Last
 
 expiry_dates = GetExpiryDates(symbol)
 expiry_dates
-expiry_date = expiry_dates[5]
+expiry_date = expiry_dates[6]
 
 # Определяем направление движения к цели
 opt_rights = c("call", "put")
