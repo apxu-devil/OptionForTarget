@@ -6,6 +6,8 @@ source('AtmStrike.R', local = T)
 source('GetExpiryDates.R', local = T)
 source('GetStrikePremiumTable.R', local = T)
 source('CalcProfitForTargets.R', local = T)
+source('CalcProfitForSpread.R', local = T)
+
 
 library(shiny)
 library(ggplot2)
@@ -30,7 +32,7 @@ ui <- fluidPage(
          textOutput(outputId = "period_days"), br(),
          numericInput(inputId = "num_target", label = "Цель по базовому активу", value = 0),
          textOutput(outputId = "target_prc"), br(),
-         selectInput("market_price_type", label = "Цена опционов:",choices = c("mid", "last"),selected = "last", multiple = F ),
+         selectInput("market_price_type", label = "Цена опционов:",choices = c("mid", "last", "mrkt"),selected = "last", multiple = F ),
          numericInput("bank_rate", label = "Безрисковая ставка, % годовых", value = 5, min = 0, max = 1, step = 0.1),
          textOutput(outputId = "period_rate"),br(),
          actionButton(inputId = "btn_apply", label = "Apply")
@@ -38,14 +40,24 @@ ui <- fluidPage(
       
       # Основная панель с результатами
       mainPanel(
-         # plotOutput("plot_strike_profit"),
-         h2("Зависимость доходности от страйка"),
-         plotlyOutput("plot_ly"), br(),
-         h2("Страйки с максимальной доходностью"),
-         DT::dataTableOutput("DT_strike_profit"), br(),
-         h2("Зависимость доходности от цели и страйка"),
-         plotlyOutput("profit_heatmap")
-         
+      tabsetPanel(
+        tabPanel(title = 'Single strike', 
+                 
+                   # plotOutput("plot_strike_profit"),
+                   h2("Зависимость доходности от страйка"),
+                   plotlyOutput("plot_ly"), br(),
+                 
+                   h2("Страйки с максимальной доходностью"),
+                   DT::dataTableOutput("DT_strike_profit"), br(),
+                 
+                   h2("Зависимость доходности от цели и страйка"),
+                   plotlyOutput("profit_heatmap"), br(),
+                 
+                   h2("Доходность спрэдов"),
+                   plotlyOutput("spread_heatmap"), br()
+
+        )
+      )
       )
    )
 )
@@ -162,6 +174,35 @@ server <- function(input, output) {
     profit_for_targets
   })
   
+  
+  #
+  # Расчитываем прибыль для спредов
+  #
+  spread_profit_table = reactive({
+    
+    # При нажатии кнопки
+    input$btn_apply
+    
+    # Определяем входные параметры функции расчёта из элементов упрвления
+    symbol = isolate(input$txt_symbol)
+    target = isolate(input$num_target)
+    symbol_price = isolate(symbol_price())
+    expiry_date = isolate(input$list_exp_dates)
+    market_price_type = isolate(input$market_price_type)
+    bank_rate = isolate(input$bank_rate)/100
+    
+    # Определяем направление движения к цели
+    opt_right = ifelse(target>symbol_price, "call", "put")
+    
+    # Доска опционов только с колонками Страйк - Прибыль
+    option_chain_short = GetStrikePremiumTable(symbol, expiry_date, market_price_type, opt_right)
+    
+    market_price = F
+    if(market_price_type=="mrkt") market_price = T
+    
+    profit_for_targets = CalcProfitForSpread(option_chain_short, target, opt_right, symbol_price, bank_rate, expiry_date, market_price)
+    profit_for_targets
+  })
 
 #
 # Таблица 5 лучших при
@@ -229,9 +270,26 @@ server <- function(input, output) {
     ggplotly(gg1)
     
     
+  })
+  
+  
+  
+  output$spread_heatmap = renderPlotly({
     
+    profit_table = spread_profit_table()
+    
+    profit_table = profit_table %>% dplyr::select(Strike1, Strike2, Return) %>% 
+      mutate(Return = round(Return * 100, 2))
+    
+    gg2 = ggplot(data=profit_table, aes(x=Strike2, y=Strike1, fill=Return)) + geom_tile() +
+      scale_fill_gradient2(low = "white", high = "green", mid = "white", name="Return, %") +
+      geom_text(aes(label=Return), size=3)
+    
+    
+    ggplotly(gg2)
     
   })
+  
   
   
 }

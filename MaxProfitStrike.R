@@ -3,13 +3,13 @@ if(!require('quantmod')) install.packages('quantmod')
 require(dplyr)
 require(ggplot2)
 # Безрисковая ставка депозита
-bank_ror = 0.05
+bank_ror = 0.045
 
 # Задаём символ базового актива;
 symbol = "QQQ"
 
 # Задаём Цель по цене безового актива;
-target = 200
+target = 160
 
 # Загружаем текущую цену базового актива;
 symbol_price = getQuote(symbol)$Last
@@ -17,10 +17,9 @@ symbol_price = getQuote(symbol)$Last
 # Загружаем доступные даты экспирации символа (Символ);
 
 
-
 expiry_dates = GetExpiryDates(symbol)
 expiry_dates
-expiry_date = expiry_dates[6]
+expiry_date = expiry_dates[5]
 
 # Определяем направление движения к цели
 opt_rights = c("call", "put")
@@ -32,6 +31,21 @@ market_price_type = market_price_types[2]
 
 
 option_chain_short = GetStrikePremiumTable(symbol, expiry_date, market_price_type, opt_right)
+
+# Прибыль по спредам
+# test:
+
+
+profit_table = CalcProfitForSpread(option_chain_short, target, opt_right, symbol_price, bank_ror, expiry_date, market_price = F)
+
+profit_table = profit_table %>% dplyr::select(Strike1, Strike2, Return) %>% 
+  mutate(Return = round(Return * 100, 2))
+
+ggplot(data=profit_table, aes(x=Strike2, y=Strike1, fill=Return)) + geom_tile() +
+  scale_fill_gradient2(low = "white", high = "green", mid = "white", name="Return, %") +
+  geom_text(aes(label=Return), size=3)
+
+
 
 #atm_index = AtmStrike(option_chain_short$Strike, symbol_price, T)
 

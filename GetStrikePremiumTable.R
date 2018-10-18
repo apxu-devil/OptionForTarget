@@ -18,14 +18,14 @@ GetStrikePremiumTable = function(symbol, expiry_date, market_price_type, opt_rig
   if(market_price_type=="mid"){
     
     option_chain_short$Mid = (option_chain_short$Ask + option_chain_short$Bid)/2
-    option_chain_short = option_chain_short[, c("Strike", "Mid")]
+    # option_chain_short = option_chain_short[, c("Strike", "Mid", "Ask", "Bid")]
   }
   
   # Рыночная цена - цена последней сделки
-  if(market_price_type=="last")
-    option_chain_short = option_chain_short[, c("Strike", "Last")]
-  
-  names(option_chain_short) = c("Strike", "Premium")
+  # if(market_price_type=="last")
+  #   option_chain_short = option_chain_short[, c("Strike", "Last", "Ask", "Bid")]
+  # 
+  # names(option_chain_short) = c("Strike", "Premium", "Ask", "Bid")
   
   return(option_chain_short)
 }
